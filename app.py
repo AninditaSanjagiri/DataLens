@@ -1086,24 +1086,42 @@ with tab_profile:
             plt.close(fig)
         else:
             st.caption("Choose a target, numerical measurement or low-cardinality category to see its distribution.")
+    
     with col_b:
         st.markdown("#### Suggested ML lifecycle")
         st.write("A practical starting sequence based on the selected task.")
-        if st.button("Generate dataset-specific steps", type="primary", key=f"lifecycle_{file_key}_{target}"):
+
+        lifecycle_key = f"lifecycle_result_{file_key}_{target}"
+
+        if st.button(
+            "Generate dataset-specific steps",
+            type="primary",
+            key=f"lifecycle_generate_{file_key}_{target}"
+        ):
             prompt = (
                 f"Dataset schema:\n{schema_text(work)}\nTask: {task}\nTarget: {target}\n"
                 "Give 7 concise, concrete ML lifecycle steps tailored to this dataset. "
                 "Mention possible leakage, data preparation, split strategy and suitable metrics."
             )
+
             response = ask_llm(prompt)
-            st.session_state[f"lifecycle_{file_key}_{target}"] = lifecycle_fallback(task, target) if llm_failed(response) else response
+
+            st.session_state[lifecycle_key] = (
+                lifecycle_fallback(task, target)
+                if llm_failed(response)
+                else response
+            )
+
             if llm_failed(response):
                 st.warning(response)
-        lifecycle = st.session_state.get(f"lifecycle_{file_key}_{target}")
+
+        lifecycle = st.session_state.get(lifecycle_key)
+
         if lifecycle:
             st.markdown(lifecycle)
         else:
             st.markdown(lifecycle_fallback(task, target))
+
 
 
 # ---------------------------------------------------------------------
